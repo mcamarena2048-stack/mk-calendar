@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+  <title>MK Calendar</title>
+  <style>
+      * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          font-family: Inter,Segoe UI,system-ui;
+      }
+
+      body {
+          background: #0a0a0a;
+          color: #fff;
+          min-height: 100vh;
+          overflow: hidden;
+          background: transparent;
+          display: flex;
+          justify-content: center;
+          padding: 20px;
+      }
+
+      .app {
+          width: 360px;
+      }
+
+      h1 {
+          font-size: 14px;
+          letter-spacing: 2px;
+          opacity: .5;
+          margin-bottom: 12px;
+          text-align: center;
+      }
+
+      .calendar-box {
+          background: #242424;
+          border: 1px solid #949494;
+          border-radius: 14px;
+          overflow: hidden;
+      }
+
+      .cal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 14px;
+          border-bottom: 1px solid #222;
+      }
+
+          .cal-header b {
+              font-size: 14px;
+          }
+
+          .cal-header .nav-btns {
+              display: flex;
+              gap: 4px;
+          }
+
+          .cal-header button {
+              background: #222;
+              border: 1px solid grey;
+              color: #FF8C00;
+              padding: 6px 10px;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 12px;
+          }
+
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          outline: 1px solid #949494;
+      }
+
+      th {
+          font-size: 10px;
+          color: grey;
+          padding: 8px 2px;
+          text-transform: uppercase;
+          outline: 1px solid #949494;
+      }
+
+      td {
+          height: 72px;
+          border-right: 1px solid #1e1e1e;
+          border-bottom: 1px solid #1e1e1e;
+          vertical-align: top;
+          padding: 4px;
+          position: relative;
+          cursor: pointer;
+          background: #141414;
+          outline: 1px solid #949494;
+      }
+
+          td.empty {
+              background: #0e0e0e;
+          }
+
+      .day-n {
+          font-size: 10px;
+          color: #fff;
+          position: absolute;
+          top: 3px;
+          left: 4px;
+      }
+
+      td.today {
+          outline: 1px solid #fff;
+          outline-offset: -2px;
+      }
+
+      td.s-green {
+          background: #0f2312!important;
+      }
+
+      td.s-red {
+          background: #2a1212!important;
+      }
+
+      td.s-yellow {
+          background: #1e1e12;
+      }
+
+      .tasks-mini {
+          margin-top: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+      }
+
+      .t-mini {
+          font-size: 9px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          color: #ccc;
+      }
+
+      .pct {
+          font-size: 8px;
+          position: absolute;
+          bottom: 2px;
+          right: 3px;
+          color: red;
+          background: yellow;
+          padding: 1px 4px;
+          border-radius: 10px;
+      }
+
+          .pct.high {
+              color: blue;
+              background: lime;
+          }
+
+      .overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.7);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 20;
+          padding: 15px;
+      }
+
+          .overlay.open {
+              display: flex;
+          }
+
+      .panel {
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          width: 360px;
+          max-width: 90vw;
+          border-radius: 16px;
+          overflow: hidden;
+          max-height: 85vh;
+          display: flex;
+          flex-direction: column;
+      }
+
+      .panel-head {
+          padding: 14px;
+          border-bottom: 1px solid #222;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+
+      .panel-body {
+          padding: 12px;
+          overflow: auto;
+          flex: 1;
+      }
+
+      .task-card {
+          background: #222;
+          border: 1px solid #2e2e2e;
+          border-radius: 10px;
+          margin-bottom: 8px;
+          overflow: hidden;
+      }
+
+      .task-row {
+          padding: 10px;
+          display: flex;
+          gap: 8px;
+          cursor: pointer;
+          align-items: flex-start;
+      }
+
+      .task-row .chk {
+          width: 18px;
+          height: 18px;
+          accent-color: #3dd68c;
+          margin-top: 2px;
+          cursor: pointer;
+      }
+
+      .task-row .info {
+          flex: 1;
+      }
+
+      .task-row .title-area {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+
+      .task-row .title {
+          font-size: 13px;
+          font-weight: 600;
+      }
+
+      .task-row .desc {
+          font-size: 11px;
+          color: #888;
+          margin-top: 2px;
+      }
+
+      .task-pct-badge {
+          font-size: 9px;
+          background: #333;
+          color: #aaa;
+          padding: 2px 6px;
+          border-radius: 6px;
+          font-weight: 600;
+      }
+
+      .toggle-subs-btn {
+          font-size: 10px;
+          color: #FF8C00;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          margin-top: 4px;
+          display: inline-block;
+      }
+
+      .subtasks-accordion {
+          display: none;
+          background: #181818;
+          border-top: 1px solid #2a2a2a;
+          padding: 8px 10px 8px 34px;
+          flex-direction: column;
+          gap: 6px;
+      }
+
+      .subtasks-accordion.open {
+          display: flex;
+      }
+
+      .subtask-view-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: #ddd;
+      }
+
+      .subtask-view-item input[type=checkbox] {
+          width: 15px;
+          height: 15px;
+          accent-color: #3dd68c;
+          cursor: pointer;
+      }
+
+      .edit-panel {
+          background: #161616;
+          border: 1px solid #333;
+          width: 380px;
+          max-width: 95vw;
+          border-radius: 16px;
+          padding: 16px;
+          max-height: 90vh;
+          overflow: auto;
+      }
+
+          .edit-panel label {
+              font-size: 11px;
+              color: #777;
+              display: block;
+              margin: 12px 0 4px;
+              text-transform: uppercase;
+              letter-spacing: .5px;
+          }
+
+          .edit-panel input, .edit-panel textarea, .edit-panel select {
+              width: 100%;
+              background: #222;
+              border: 1px solid #333;
+              color: #fff;
+              padding: 10px;
+              border-radius: 8px;
+              font-size: 13px;
+          }
+
+          .edit-panel textarea {
+              resize: vertical;
+              min-height: 60px;
+          }
+
+      .top-row {
+          display: flex;
+          gap: 6px;
+          margin-bottom: 4px;
+      }
+
+          .top-row .mini-box {
+              flex: 1;
+          }
+
+              .top-row .mini-box label {
+                  font-size: 9px;
+                  margin: 0 0 3px 2px;
+              }
+
+              .top-row .mini-box input {
+                  padding: 6px 8px;
+                  font-size: 12px;
+                  height: 34px;
+              }
+
+      .days-row {
+          display: flex;
+          gap: 4px;
+          margin-top: 4px;
+      }
+
+      .day-btn {
+          flex: 1;
+          background: #222;
+          border: 1px solid #333;
+          color: #777;
+          padding: 8px 0;
+          border-radius: 6px;
+          font-size: 11px;
+          cursor: pointer;
+          text-align: center;
+          font-weight: 600;
+      }
+
+      .day-btn.active {
+          background: #FF8C00;
+          color: #000;
+          border-color: #FF8C00;
+      }
+
+      .sublist {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 6px;
+      }
+
+      .sub-item {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+          background: #222;
+          padding: 6px 8px;
+          border-radius: 8px;
+          border: 1px solid #2a2a2a;
+      }
+
+          .sub-item input[type=checkbox] {
+              width: 18px;
+              height: 18px;
+              flex-shrink: 0;
+          }
+
+          .sub-item .sub-text {
+              flex: 1;
+              background: #1a1a1a;
+              border: 1px solid #333;
+              color: #fff;
+              padding: 6px 8px;
+              border-radius: 6px;
+              font-size: 13px;
+          }
+
+      .badge-type {
+          font-size: 8px;
+          background: #333;
+          color: #aaa;
+          padding: 1px 5px;
+          border-radius: 4px;
+          margin-left: 6px;
+          text-transform: uppercase;
+      }
+
+      .section-title {
+          font-size: 11px;
+          color: #FF8C00;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin: 12px 0 6px 2px;
+          border-bottom: 1px solid #222;
+          padding-bottom: 4px;
+      }
+
+      .btn {
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: none;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+      }
+
+      .btn-primary {
+          background: #fff;
+          color: #000;
+          width: 100%;
+          margin-top: 12px;
+      }
+
+      .btn-ghost {
+          background: #222;
+          color: #fff;
+      }
+
+      .btn-danger {
+          background: #3a1515;
+          color: #ff6b6b;
+      }
+
+      .actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 14px;
+      }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "@tauri-apps/api/core": "https://unpkg.com/@tauri-apps/api@2/core.js"
+      }
+    }
+  </script>
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <div class="app">
+   <div class="calendar-box">
+    <div class="cal-header">
+     <b id="monthLabel"></b>
+     <div class="nav-btns">
+      <button onclick="openAllTasks()" style="background:#1a1a1a; border-color:#FF8C00;">All</button>
+      <button onclick="changeMonth(-1)"><</button>
+      <button onclick="goToday()">Today</button>
+      <button onclick="changeMonth(1)">></button>
+      <button id="toggle-btn" class="menu-btn" title="Toggle Borders">☰</button>
+     </div>
+    </div>
+    <table>
+        <thead>
+            <tr><th>D</th><th>L</th><th>M</th><th>M</th><th>J</th><th>V</th><th>S</th></tr>
+        </thead>
+        <tbody id="calBody">
+        </tbody>
+    </table>
+   </div>
+  </div>
+
+  <!-- Modal Tareas del Día -->
+  <div class="overlay" id="overlay3">
+      <div class="panel">
+          <div class="panel-head">
+              <b id="dayTitle">NOV 1</b>
+              <button class="btn btn-ghost" onclick="close3()">X</button>
+          </div>
+          <div class="panel-body" id="dayList">
+          </div>
+          <div style="padding: 12px; border-top: 1px solid #222">
+              <button class="btn btn-primary" onclick="openEditNew()">+ New task</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Ver Todas las Tareas -->
+  <div class="overlay" id="overlayAll">
+      <div class="panel">
+          <div class="panel-head">
+              <b>ALL TASKS DIRECTORY</b>
+              <button class="btn btn-ghost" onclick="closeAllTasks()">X</button>
+          </div>
+          <div class="panel-body" id="allTasksList">
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Edición / Creación -->
+  <div class="overlay" id="overlay4">
+      <div class="edit-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+              <b id="editHeader">EDIT TASK</b>
+              <button class="btn btn-ghost" onclick="close4()">X</button>
+          </div>
+
+          <label for="eType">TASK TYPE</label>
+          <select id="eType" onchange="onTypeChange()">
+              <option value="single">Single Task (One day)</option>
+              <option value="recurring">Daily Habit / Recurring</option>
+              <option value="project">Multi-day Project (Range)</option>
+          </select>
+
+          <div id="projectDateFields" style="display:none; margin-top: 4px;">
+              <div class="top-row">
+                  <div class="mini-box">
+                      <label for="eStartDate">START DATE</label>
+                      <input id="eStartDate" type="date" />
+                  </div>
+                  <div class="mini-box">
+                      <label for="eEndDate">END DATE</label>
+                      <input id="eEndDate" type="date" />
+                  </div>
+              </div>
+          </div>
+
+          <div id="recurringOptions" style="display:none; margin-top: 4px;">
+              <label for="eRecStartDate">START FROM DATE</label>
+              <input id="eRecStartDate" type="date" />
+              <div style="margin-top: 8px; font-weight: bold;">ACTIVE DAYS OF WEEK</div>
+              <div class="days-row" id="eDaysToggle"></div>
+          </div>
+
+          <div class="top-row" style="margin-top: 8px;">
+              <div class="mini-box">
+                  <label for="eStart">START</label>
+                  <input id="eStart" type="time" />
+              </div>
+              <div class="mini-box">
+                  <label for="eEnd">END</label>
+                  <input id="eEnd" type="time" />
+              </div>
+              <div class="mini-box">
+                  <label for="ePrio">PRIO</label>
+                  <input id="ePrio" placeholder="High" />
+              </div>
+          </div>
+          <label for="eTitle">TASK TITLE</label>
+          <input id="eTitle" placeholder="WORK, GYM, READ" />
+          <label for="eDesc">DESCRIPTION</label>
+          <textarea id="eDesc" placeholder="Descripcion..."></textarea>
+          <div style="font-weight: bold;">SUBLIST</div>
+          <div class="sublist" id="eSublist"></div>
+          <button class="btn btn-ghost" onclick="addSub()" style="margin-top: 8px; width: 100%">+ add subtask</button>
+          <div class="actions">
+              <button class="btn btn-danger" onclick="deleteTask()">Delete</button>
+              <button class="btn btn-primary" onclick="saveTask()" style="flex: 1">Save</button>
+          </div>
+      </div>
+  </div>
+
+<script>
+
+let rawData = JSON.parse(localStorage.getItem('mk4_calendar') || '{}');
+let data = {
+    single: rawData.single || {},
+    recurring: rawData.recurring || [],
+    projects: rawData.projects || [],
+    completions: rawData.completions || {}
+};
+
+let today = new Date();
+let curM = today.getMonth();
+let curY = today.getFullYear();
+let selDate = null;
+let editingTaskId = null;
+let editingTaskType = null;
+let currentDaysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+
+function save() {
+    localStorage.setItem('mk4_calendar', JSON.stringify(data));
+}
+
+function key(y, m, d) {
+    return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+
+function daysInMonth(m, y) {
+    return new Date(y, m + 1, 0).getDate();
+}
+
+function parseKey(k) {
+    let p = k.split('-');
+    return { y: parseInt(p[0]), m: parseInt(p[1]), d: parseInt(p[2]) };
+}
+
+function formatLabel(k) {
+    let { y, m, d } = parseKey(k);
+    let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[m - 1] + ' ' + d;
+}
+
+function renderDayToggles(selectedDays = [0,1,2,3,4,5,6]) {
+    currentDaysOfWeek = [...selectedDays];
+    let container = document.getElementById('eDaysToggle');
+    container.innerHTML = '';
+    let labels = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    labels.forEach((lbl, idx) => {
+        let btn = document.createElement('div');
+        btn.className = 'day-btn' + (currentDaysOfWeek.includes(idx) ? ' active' : '');
+        btn.innerText = lbl;
+        btn.onclick = () => {
+            if (currentDaysOfWeek.includes(idx)) {
+                if (currentDaysOfWeek.length > 1) {
+                    currentDaysOfWeek = currentDaysOfWeek.filter(d => d !== idx);
+                }
+            } else {
+                currentDaysOfWeek.push(idx);
+            }
+            renderDayToggles(currentDaysOfWeek);
+        };
+        container.appendChild(btn);
+    });
+}
+
+function getItemPct(t) {
+    let subs = t.subtasks || [];
+    if (subs.length === 0) {
+        return t.done ? 100 : 0;
+    }
+    let done = subs.filter(s => s.done).length;
+    return Math.round((done / subs.length) * 100);
+}
+
+function getItemsForDate(k) {
+    let items = [];
+
+    ((data.single && data.single[k]) || []).forEach(t => {
+        items.push({ ...t, type: 'single', dateKey: k });
+    });
+
+    let { y, m, d } = parseKey(k);
+    let dayOfWeek = new Date(y, m - 1, d).getDay();
+
+    (data.recurring || []).forEach(r => {
+        if (r.startDate && k < r.startDate) return;
+        let allowedDays = r.daysOfWeek !== undefined ? r.daysOfWeek : [0,1,2,3,4,5,6];
+        if (!allowedDays.includes(dayOfWeek)) return;
+
+        let comp = data.completions[r.id]?.[k] || { done: false, subtasks: {} };
+        let resolvedSubs = (r.subtasks || []).map((s, idx) => ({
+            text: s.text,
+            done: comp.subtasks?.[idx] || false,
+            originalIndex: idx
+        }));
+        
+        items.push({
+            id: r.id,
+            title: r.title,
+            desc: r.desc,
+            start: r.start,
+            end: r.end,
+            prio: r.prio,
+            done: comp.done,
+            subtasks: resolvedSubs,
+            type: 'recurring',
+            dateKey: k
+        });
+    });
+
+    (data.projects || []).forEach(p => {
+        if (p.startDate && p.endDate && k >= p.startDate && k <= p.endDate) {
+            let comp = data.completions[p.id]?.[k] || { done: false, subtasks: {} };
+            let resolvedSubs = (p.subtasks || []).map((s, idx) => ({
+                text: s.text,
+                done: comp.subtasks?.[idx] || false,
+                originalIndex: idx
+            }));
+            items.push({
+                id: p.id,
+                title: p.title,
+                desc: p.desc,
+                start: p.start,
+                end: p.end,
+                prio: p.prio,
+                done: comp.done,
+                subtasks: resolvedSubs,
+                type: 'project',
+                dateKey: k
+            });
+        }
+    });
+
+    return items;
+}
+
+function statusClass(k) {
+    let arr = getItemsForDate(k);
+    if (arr.length === 0) return '';
+    let allDone = arr.every(t => t.done);
+    if (allDone) return 's-green';
+    let { y, m, d } = parseKey(k);
+    let dt = new Date(y, m - 1, d);
+    let now = new Date();
+    now.setHours(0, 0, 0, 0);
+    if (dt < now && arr.some(t => !t.done)) return 's-red';
+    return 's-yellow';
+}
+
+function pct(arr) {
+    if (!arr.length) return 0;
+    let total = 0, done = 0;
+    arr.forEach(t => {
+        total++;
+        if (t.done) done++;
+        (t.subtasks || []).forEach(s => {
+            total++;
+            if (s.done) done++;
+        });
+    });
+    return Math.round((done / total) * 100);
+}
+
+function draw() {
+    let body = document.getElementById('calBody');
+    body.innerHTML = '';
+    let first = new Date(curY, curM, 1).getDay();
+    let total = daysInMonth(curM, curY);
+    document.getElementById('monthLabel').innerText = new Date(curY, curM).toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric'
+    }).toUpperCase();
+    let day = 1;
+    for (let r = 0; r < 6; r++) {
+        let tr = document.createElement('tr');
+        for (let c = 0; c < 7; c++) {
+            let td = document.createElement('td');
+            if (r === 0 && c < first || day > total) {
+                td.className = 'empty';
+            } else {
+                let k = key(curY, curM, day);
+                td.className = statusClass(k);
+                if (k === key(today.getFullYear(), today.getMonth(), today.getDate())) td.classList.add('today');
+                td.innerHTML = `<div class="day-n">${day}</div>`;
+                let arr = getItemsForDate(k);
+                if (arr.length) {
+                    let mini = document.createElement('div');
+                    mini.className = 'tasks-mini';
+                    arr.slice(0, 3).forEach(t => {
+                        let d = document.createElement('div');
+                        d.className = 't-mini';
+                        d.innerText = '• ' + (t.title || 'task').toUpperCase().slice(0, 12);
+                        mini.appendChild(d);
+                    });
+                    td.appendChild(mini);
+                    let p = document.createElement('div');
+                    p.className = 'pct' + (pct(arr) === 100 ? ' high' : '');
+                    p.innerText = pct(arr) + '%';
+                    td.appendChild(p);
+                }
+                td.onclick = ((kk) => () => open3(kk))(k);
+                day++;
+            }
+            tr.appendChild(td);
+        }
+        body.appendChild(tr);
+        if (day > total) break;
+    }
+}
+
+function open3(k) {
+    selDate = k;
+    document.getElementById('dayTitle').innerText = formatLabel(k);
+    render3();
+    document.getElementById('overlay3').classList.add('open');
+}
+
+function close3() {
+    document.getElementById('overlay3').classList.remove('open');
+    draw();
+}
+
+function createTaskCard(t) {
+    let card = document.createElement('div');
+    card.className = 'task-card';
+    card.setAttribute('data-id', t.id);
+    card.setAttribute('data-type', t.type);
+    card.setAttribute('data-datekey', t.dateKey);
+
+    let badgeText = t.type === 'recurring' ? 'habit' : (t.type === 'project' ? 'project' : '');
+    let badgeHTML = badgeText ? `<span class="badge-type">${badgeText}</span>` : '';
+    let taskPct = getItemPct(t);
+    let hasSubtasks = (t.subtasks || []).length > 0;
+    let doneSubCount = (t.subtasks || []).filter(s => s.done).length;
+
+    let subToggleBtn = hasSubtasks 
+        ? `<button class="toggle-subs-btn" onclick="event.stopPropagation(); toggleSubAccordion(this)">▶ Show subtasks (${doneSubCount}/${t.subtasks.length})</button>`
+        : '';
+
+    let row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+        <input class="chk" type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleDone(this, '${t.id}', '${t.type}', '${t.dateKey}')">
+        <div class="info" onclick="openEdit('${t.id}', '${t.type}', '${t.dateKey}')">
+            <div class="title-area">
+                <div class="title">${t.title || 'Title'} ${badgeHTML}</div>
+                <div class="task-pct-badge">${taskPct}%</div>
+            </div>
+            <div class="desc">${t.desc || ''} ${t.start ? ' | ' + t.start + '-' + t.end : ''}</div>
+            ${subToggleBtn}
+        </div>`;
+
+    card.appendChild(row);
+
+    if (hasSubtasks) {
+        let subContainer = document.createElement('div');
+        subContainer.className = 'subtasks-accordion';
+        
+        t.subtasks.forEach((sub, sIdx) => {
+            let subRow = document.createElement('div');
+            subRow.className = 'subtask-view-item';
+            subRow.innerHTML = `
+                <input type="checkbox" ${sub.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleSubDone(this, '${t.id}', '${t.type}', '${t.dateKey}', ${sub.originalIndex !== undefined ? sub.originalIndex : sIdx})">
+                <span style="${sub.done ? 'text-decoration:line-through;color:#666;' : ''}">${sub.text}</span>
+            `;
+            subContainer.appendChild(subRow);
+        });
+
+        card.appendChild(subContainer);
+    }
+
+    return card;
+}
+
+function toggleSubAccordion(btn) {
+    let accordion = btn.closest('.task-card').querySelector('.subtasks-accordion');
+    if (accordion) {
+        let isOpen = accordion.classList.contains('open');
+        if (isOpen) {
+            accordion.classList.remove('open');
+            btn.innerText = btn.innerText.replace('▼', '▶');
+        } else {
+            accordion.classList.add('open');
+            btn.innerText = btn.innerText.replace('▶', '▼');
+        }
+    }
+}
+
+function render3() {
+    let list = getItemsForDate(selDate);
+    let cont = document.getElementById('dayList');
+    cont.innerHTML = '';
+    if (list.length === 0) {
+        cont.innerHTML = '<div style="color:#555;font-size:13px;text-align:center;padding:20px">Empty list</div>';
+        return;
+    }
+    list.forEach(t => {
+        cont.appendChild(createTaskCard(t));
+    });
+}
+
+function openAllTasks() {
+    let cont = document.getElementById('allTasksList');
+    cont.innerHTML = '';
+    let hasAny = false;
+
+    let singleKeys = Object.keys(data.single || {});
+    if (singleKeys.length > 0) {
+        hasAny = true;
+        let sec = document.createElement('div');
+        sec.className = 'section-title';
+        sec.innerText = 'Single Tasks';
+        cont.appendChild(sec);
+
+        singleKeys.forEach(dk => {
+            (data.single[dk] || []).forEach(t => {
+                let item = { ...t, type: 'single', dateKey: dk };
+                cont.appendChild(createTaskCard(item));
+            });
+        });
+    }
+
+    if ((data.recurring || []).length > 0) {
+        hasAny = true;
+        let sec = document.createElement('div');
+        sec.className = 'section-title';
+        sec.innerText = 'Daily Habits / Recurring';
+        cont.appendChild(sec);
+
+        let refDate = selDate || key(curY, curM, today.getDate());
+
+        data.recurring.forEach(r => {
+            let comp = data.completions[r.id]?.[refDate] || { done: false, subtasks: {} };
+            let resolvedSubs = (r.subtasks || []).map((s, idx) => ({
+                text: s.text,
+                done: comp.subtasks?.[idx] || false,
+                originalIndex: idx
+            }));
+            let item = {
+                ...r,
+                type: 'recurring',
+                dateKey: refDate,
+                done: comp.done,
+                subtasks: resolvedSubs
+            };
+            cont.appendChild(createTaskCard(item));
+        });
+    }
+
+    if ((data.projects || []).length > 0) {
+        hasAny = true;
+        let sec = document.createElement('div');
+        sec.className = 'section-title';
+        sec.innerText = 'Multi-day Projects';
+        cont.appendChild(sec);
+
+        let refDate = selDate || key(curY, curM, today.getDate());
+
+        data.projects.forEach(p => {
+            let comp = data.completions[p.id]?.[refDate] || { done: false, subtasks: {} };
+            let resolvedSubs = (p.subtasks || []).map((s, idx) => ({
+                text: s.text,
+                done: comp.subtasks?.[idx] || false,
+                originalIndex: idx
+            }));
+            let item = {
+                ...p,
+                type: 'project',
+                dateKey: refDate,
+                done: comp.done,
+                subtasks: resolvedSubs
+            };
+            cont.appendChild(createTaskCard(item));
+        });
+    }
+
+    if (!hasAny) {
+        cont.innerHTML = '<div style="color:#555;font-size:13px;text-align:center;padding:20px">No tasks created yet</div>';
+    }
+
+    document.getElementById('overlayAll').classList.add('open');
+}
+
+function closeAllTasks() {
+    document.getElementById('overlayAll').classList.remove('open');
+    draw();
+}
+
+// Actualización selectiva local (sin destruir acordeones abiertos)
+function updateCardUI(cardEl, updatedItem) {
+    let badge = cardEl.querySelector('.task-pct-badge');
+    if (badge) badge.innerText = getItemPct(updatedItem) + '%';
+
+    let subBtn = cardEl.querySelector('.toggle-subs-btn');
+    if (subBtn && updatedItem.subtasks) {
+        let doneCount = updatedItem.subtasks.filter(s => s.done).length;
+        let isExpanded = subBtn.innerText.includes('▼');
+        subBtn.innerText = (isExpanded ? '▼ ' : '▶ ') + `Show subtasks (${doneCount}/${updatedItem.subtasks.length})`;
+    }
+    draw();
+}
+
+function toggleDone(checkboxEl, id, type, dateKey) {
+    let cardEl = checkboxEl.closest('.task-card');
+    let isChecked = checkboxEl.checked;
+
+    if (type === 'single') {
+        let arr = data.single[dateKey] || [];
+        let t = arr.find(x => x.id === id);
+        if (t) {
+            t.done = isChecked;
+            save();
+            updateCardUI(cardEl, t);
+        }
+    } else {
+        if (!data.completions[id]) data.completions[id] = {};
+        if (!data.completions[id][dateKey]) data.completions[id][dateKey] = { done: false, subtasks: {} };
+        data.completions[id][dateKey].done = isChecked;
+        save();
+        
+        let itemMock = getItemsForDate(dateKey).find(x => x.id === id);
+        if (itemMock) updateCardUI(cardEl, itemMock);
+    }
+}
+
+function toggleSubDone(checkboxEl, id, type, dateKey, subIndex) {
+    let cardEl = checkboxEl.closest('.task-card');
+    let isChecked = checkboxEl.checked;
+    
+    // Actualizar visualmente el texto de la subtarea afectada
+    let span = checkboxEl.nextElementSibling;
+    if (span) {
+        span.style.textDecoration = isChecked ? 'line-through' : 'none';
+        span.style.color = isChecked ? '#666' : '#ddd';
+    }
+
+    if (type === 'single') {
+        let arr = data.single[dateKey] || [];
+        let t = arr.find(x => x.id === id);
+        if (t && t.subtasks && t.subtasks[subIndex] !== undefined) {
+            t.subtasks[subIndex].done = isChecked;
+            save();
+            updateCardUI(cardEl, t);
+        }
+    } else {
+        if (!data.completions[id]) data.completions[id] = {};
+        if (!data.completions[id][dateKey]) data.completions[id][dateKey] = { done: false, subtasks: {} };
+        if (!data.completions[id][dateKey].subtasks) data.completions[id][dateKey].subtasks = {};
+
+        data.completions[id][dateKey].subtasks[subIndex] = isChecked;
+        save();
+
+        let itemMock = getItemsForDate(dateKey).find(x => x.id === id);
+        if (itemMock) updateCardUI(cardEl, itemMock);
+    }
+}
+
+function onTypeChange() {
+    let type = document.getElementById('eType').value;
+    document.getElementById('projectDateFields').style.display = (type === 'project') ? 'block' : 'none';
+    document.getElementById('recurringOptions').style.display = (type === 'recurring') ? 'block' : 'none';
+}
+
+function openEditNew() {
+    editingTaskId = null;
+    editingTaskType = 'single';
+    document.getElementById('eType').value = 'single';
+    onTypeChange();
+
+    document.getElementById('eTitle').value = '';
+    document.getElementById('eDesc').value = '';
+    document.getElementById('eStart').value = '';
+    document.getElementById('eEnd').value = '';
+    document.getElementById('ePrio').value = '';
+    document.getElementById('eStartDate').value = selDate || key(curY, curM, today.getDate());
+    document.getElementById('eEndDate').value = selDate || key(curY, curM, today.getDate());
+    document.getElementById('eRecStartDate').value = selDate || key(curY, curM, today.getDate());
+    renderDayToggles([0,1,2,3,4,5,6]);
+    
+    document.getElementById('eSublist').innerHTML = '';
+    document.getElementById('editHeader').innerText = 'NEW TASK';
+    document.getElementById('overlay4').classList.add('open');
+}
+
+function openEdit(id, type, dateKey) {
+    editingTaskId = id;
+    editingTaskType = type;
+
+    let item = null;
+    if (type === 'single') {
+        item = (data.single[dateKey] || []).find(x => x.id === id);
+    } else if (type === 'recurring') {
+        item = (data.recurring || []).find(x => x.id === id);
+    } else if (type === 'project') {
+        item = (data.projects || []).find(x => x.id === id);
+    }
+    if (!item) return;
+
+    document.getElementById('eType').value = type;
+    onTypeChange();
+
+    document.getElementById('eTitle').value = item.title || '';
+    document.getElementById('eDesc').value = item.desc || '';
+    document.getElementById('eStart').value = item.start || '';
+    document.getElementById('eEnd').value = item.end || '';
+    document.getElementById('ePrio').value = item.prio || '';
+    
+    if (type === 'project') {
+        document.getElementById('eStartDate').value = item.startDate || selDate;
+        document.getElementById('eEndDate').value = item.endDate || selDate;
+    }
+    if (type === 'recurring') {
+        document.getElementById('eRecStartDate').value = item.startDate || selDate;
+        renderDayToggles(item.daysOfWeek !== undefined ? item.daysOfWeek : [0,1,2,3,4,5,6]);
+    }
+
+    let subCont = document.getElementById('eSublist');
+    subCont.innerHTML = '';
+    (item.subtasks || []).forEach(s => addSub(s.text, s.done));
+
+    document.getElementById('editHeader').innerText = 'EDIT TASK';
+    document.getElementById('overlay4').classList.add('open');
+}
+
+function close4() {
+    document.getElementById('overlay4').classList.remove('open');
+}
+
+function addSub(text = '', done = false) {
+    let cont = document.getElementById('eSublist');
+    let div = document.createElement('div');
+    div.className = 'sub-item';
+    let chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.checked = !!done;
+    let inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'sub-text';
+    inp.placeholder = 'Write a subtask...';
+    inp.value = text;
+    let btn = document.createElement('button');
+    btn.innerText = 'x';
+    btn.style.cssText = 'background:transparent;border:none;color:#666;cursor:pointer;padding:0 6px';
+    btn.onclick = () => div.remove();
+    div.appendChild(chk);
+    div.appendChild(inp);
+    div.appendChild(btn);
+    cont.appendChild(div);
+}
+
+function saveTask() {
+    let type = document.getElementById('eType').value;
+    let title = document.getElementById('eTitle').value.trim() || 'TASK';
+    let desc = document.getElementById('eDesc').value;
+    let start = document.getElementById('eStart').value;
+    let end = document.getElementById('eEnd').value;
+    let prio = document.getElementById('ePrio').value;
+    let startDate = document.getElementById('eStartDate').value || selDate;
+    let endDate = document.getElementById('eEndDate').value || selDate;
+    let recStartDate = document.getElementById('eRecStartDate').value || selDate;
+
+    let subs = [];
+    document.querySelectorAll('#eSublist .sub-item').forEach(el => {
+        let chk = el.querySelector('input[type=checkbox]').checked;
+        let txt = el.querySelector('.sub-text').value.trim();
+        if (txt) subs.push({ text: txt, done: chk });
+    });
+
+    if (editingTaskId) {
+        if (editingTaskType === 'single') {
+            let arr = data.single[selDate] || [];
+            let t = arr.find(x => x.id === editingTaskId);
+            if (t) Object.assign(t, { title, desc, start, end, prio, subtasks: subs });
+        } else if (editingTaskType === 'recurring') {
+            let r = (data.recurring || []).find(x => x.id === editingTaskId);
+            if (r) Object.assign(r, { title, desc, start, end, prio, startDate: recStartDate, daysOfWeek: currentDaysOfWeek, subtasks: subs });
+        } else if (editingTaskType === 'project') {
+            let p = (data.projects || []).find(x => x.id === editingTaskId);
+            if (p) Object.assign(p, { title, desc, start, end, prio, startDate, endDate, subtasks: subs });
+        }
+    } else {
+        let newId = Date.now().toString();
+        let targetDate = selDate || key(curY, curM, today.getDate());
+        if (type === 'single') {
+            if (!data.single[targetDate]) data.single[targetDate] = [];
+            data.single[targetDate].push({ id: newId, title, desc, start, end, prio, done: false, subtasks: subs });
+        } else if (type === 'recurring') {
+            if (!data.recurring) data.recurring = [];
+            data.recurring.push({ id: newId, title, desc, start, end, prio, startDate: recStartDate, daysOfWeek: currentDaysOfWeek, subtasks: subs });
+        } else if (type === 'project') {
+            if (!data.projects) data.projects = [];
+            data.projects.push({ id: newId, title, desc, start, end, prio, startDate, endDate, subtasks: subs });
+        }
+    }
+    save();
+    close4();
+    if (document.getElementById('overlay3').classList.contains('open')) render3();
+    if (document.getElementById('overlayAll').classList.contains('open')) openAllTasks();
+    draw();
+}
+
+function deleteTask() {
+    if (!editingTaskId) {
+        close4();
+        return;
+    }
+    if (editingTaskType === 'single') {
+        data.single[selDate] = (data.single[selDate] || []).filter(x => x.id !== editingTaskId);
+    } else if (editingTaskType === 'recurring') {
+        data.recurring = (data.recurring || []).filter(x => x.id !== editingTaskId);
+        delete data.completions[editingTaskId];
+    } else if (editingTaskType === 'project') {
+        data.projects = (data.projects || []).filter(x => x.id !== editingTaskId);
+        delete data.completions[editingTaskId];
+    }
+    save();
+    close4();
+    if (document.getElementById('overlay3').classList.contains('open')) render3();
+    if (document.getElementById('overlayAll').classList.contains('open')) openAllTasks();
+    draw();
+}
+
+function changeMonth(d) {
+    curM += d;
+    if (curM > 11) { curM = 0; curY++; }
+    if (curM < 0) { curM = 11; curY--; }
+    draw();
+}
+
+function goToday() {
+    curM = today.getMonth();
+    curY = today.getFullYear();
+    draw();
+}
+
+draw();
+
+</script>
+</body>
+</html>
